@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Feliz Navidad 🎄</title>
+<style>
+  body {
+    margin: 0;
+    overflow: hidden;
+    background: radial-gradient(circle at top, #001a2d, #000);
+  }
+  canvas { display: block; }
+</style>
+</head>
+
+<body>
+
+<audio id="music" loop>
+  <source src="musica.mp3" type="audio/mpeg">
+</audio>
+
+<canvas id="canvas"></canvas>
+
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+const music = document.getElementById("music");
+
+canvas.width = innerWidth;
+canvas.height = innerHeight;
+
+const centerX = canvas.width / 2;
+const baseY = canvas.height * 0.78;
+
+let musicStarted = false;
+
+/* ================= FONDO ================= */
+function drawBackground() {
+  // 🌕 Luna
+  ctx.fillStyle = "#f5f3ce";
+  ctx.beginPath();
+  ctx.arc(canvas.width * 0.85, canvas.height * 0.18, 45, 0, Math.PI * 2);
+  ctx.fill();
+
+  // ⛰ Suelo
+  ctx.fillStyle = "#000";
+  ctx.fillRect(0, baseY + 50, canvas.width, canvas.height);
+}
+
+/* ================= NIEVE ================= */
+const snowflakes = Array.from({ length: 220 }, () => ({
+  x: Math.random() * canvas.width,
+  y: Math.random() * canvas.height,
+  size: Math.random() * 3 + 1,
+  speed: Math.random() * 1.2 + 0.4,
+  drift: Math.random() * 0.6 - 0.3
+}));
+
+function drawSnow() {
+  ctx.fillStyle = "white";
+  snowflakes.forEach(s => {
+    s.y += s.speed;
+    s.x += s.drift;
+
+    if (s.y > canvas.height) {
+      s.y = -10;
+      s.x = Math.random() * canvas.width;
+    }
+
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
+/* ================= CORAZONES ================= */
+const hearts = Array.from({ length: 90 }, () => ({
+  x: Math.random() * canvas.width,
+  y: canvas.height + Math.random() * 300,
+  size: Math.random() * 10 + 6,
+  speed: Math.random() * 0.5 + 0.3,
+  drift: Math.random() * 0.6 - 0.3
+}));
+
+function drawHearts() {
+  ctx.font = "20px Arial";
+  hearts.forEach(h => {
+    h.y -= h.speed;
+    h.x += h.drift;
+
+    if (h.y < -20) {
+      h.y = canvas.height + 50;
+      h.x = Math.random() * canvas.width;
+    }
+
+    ctx.fillText("💖", h.x, h.y);
+  });
+}
+
+/* ================= DECORACIÓN LATERAL ================= */
+function drawSideDecor() {
+  ctx.font = "24px Arial";
+  for (let y = 80; y < canvas.height - 80; y += 60) {
+    ctx.fillText("🎄", 20, y);
+    ctx.fillText("🎄", canvas.width - 40, y);
+    ctx.fillText("✨", 50, y + 30);
+    ctx.fillText("✨", canvas.width - 70, y + 30);
+  }
+}
+
+/* ================= ÁRBOL ================= */
+const particles = [];
+const total = 700;
+let visible = 0;
+let rotation = 0;
+
+for (let i = 0; i < total; i++) {
+  const t = i / total;
+  particles.push({
+    t,
+    angle: t * Math.PI * 10,
+    radius: (1 - t) * 170,
+    size: Math.random() * 2 + 0.5
+  });
+}
+
+/* ================= REGALO ================= */
+const gift = { x: centerX, y: baseY + 25, size: 40 };
+let showCard = false;
+let cartaY = 0;
+
+/* ================= CARTA ================= */
+const mensaje = [
+  "🎄 Ana, espero que estés teniendo una feliz Noche Buena.",
+  "😊 Pásala bien con tus padres y con tus hermanos.",
+  "👨‍👩‍👧‍👦 Con toda tu familia y las personas que te rodean.",
+  "✨ Que todos tus sueños, metas y aspiraciones",
+  "🌟 se cumplan de aquí para adelante.",
+  "",
+  "💭 Siento de antemano tal vez arruinártela",
+  "✍️ con lo que escribiré ahora.",
+  "",
+  "❤️ Pero ya no pude soportarlo más.",
+  "💖 Desde hace 3 años me gustas.",
+  "😔 Nunca te lo pude decir en persona.",
+  "🙈 No te lo dije por cobarde.",
+  "",
+  "🤍 Aunque sé que no sientes lo mismo por mí,",
+  "🤝 espero que sigamos siendo amigos.",
+  "🌈 Tal vez el destino quiera algo más.",
+  "🫂 Siempre estaré allí si necesitas algo.",
+  "",
+  "💌 Con cariño,",
+  "❤️ Josué"
+];
+
+/* ================= CLICK ================= */
+canvas.addEventListener("click", e => {
+  const dx = e.clientX - gift.x;
+  const dy = e.clientY - gift.y;
+
+  if (Math.sqrt(dx*dx + dy*dy) < gift.size && !showCard) {
+    showCard = true;
+    cartaY = canvas.height / 2 + 150;
+
+    if (!musicStarted) {
+      music.volume = 0.9;
+      music.play();
+      musicStarted = true;
+    }
+  }
+});
+
+/* ================= ANIMACIÓN ================= */
+function animate() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  drawBackground();
+  drawSnow();
+  drawHearts();
+  drawSideDecor();
+
+  // Árbol
+  rotation += 0.01;
+  visible = Math.min(visible + 10, total);
+
+  for (let i = 0; i < visible; i++) {
+    const p = particles[i];
+    const a = p.angle + rotation;
+    const x = centerX + Math.cos(a) * p.radius;
+    const y = baseY - p.t * 420;
+
+    ctx.fillStyle = `hsl(${(Date.now()/30 + p.t*200)%360},100%,60%)`;
+    ctx.beginPath();
+    ctx.arc(x, y, p.size, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  // ⭐ Estrella
+  ctx.font = "30px Arial";
+  ctx.fillText("⭐", centerX - 14, baseY - 430);
+
+  // 🎁 Regalo
+  if (!showCard) {
+    ctx.fillStyle = "#c0392b";
+    ctx.fillRect(gift.x - 20, gift.y - 20, 40, 40);
+    ctx.fillStyle = "#f1c40f";
+    ctx.fillRect(gift.x - 5, gift.y - 20, 10, 40);
+    ctx.fillRect(gift.x - 20, gift.y - 5, 40, 10);
+  }
+
+  // 💌 Carta
+  if (showCard) {
+    const w = 540, h = 360;
+    const x = centerX - w/2, y = canvas.height/2 - h/2;
+
+    ctx.fillStyle = "rgba(255,255,255,0.18)";
+    ctx.fillRect(x, y, w, h);
+
+    ctx.strokeStyle = "rgba(255,255,255,0.4)";
+    ctx.strokeRect(x, y, w, h);
+
+    ctx.fillStyle = "#fff";
+    ctx.font = "18px Arial";
+
+    mensaje.forEach((l,i)=>{
+      const yy = cartaY + i*22;
+      if (yy > y+20 && yy < y+h-20) {
+        const mw = ctx.measureText(l).width;
+        ctx.fillText(l, centerX - mw/2, yy);
+      }
+    });
+
+    cartaY -= 0.35;
+    if (cartaY + mensaje.length*22 < y) cartaY = y + h;
+  }
+
+  requestAnimationFrame(animate);
+}
+
+animate();
+</script>
+</body>
+</html>
